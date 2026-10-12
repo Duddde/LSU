@@ -1,0 +1,14 @@
+node_modules/
+*.log
+
+# Données de l'établissement : base SQLite, documents déposés et sauvegardes.
+# Elles contiennent des informations nominatives sur des élèves et ne doivent
+# jamais partir sur un dépôt distant.
+data/
+
+# Référentiels ODT de l'établissement : documents internes, ils restent sur le
+# poste. Les déposer à la racine avant le premier démarrage (voir README).
+*.odt
+
+# Fichiers temporaires de LibreOffice / Word
+~$*

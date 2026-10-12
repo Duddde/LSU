@@ -1,0 +1,21 @@
+{
+  "name": "lsu-livret-scolaire",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Livret Scolaire Unique - suivi des competences par matiere et sous-competence",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "reset": "node server/scripts/reset.js",
+    "sauvegarde": "node server/scripts/sauvegarde.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^2.4.0"
+  }
+}

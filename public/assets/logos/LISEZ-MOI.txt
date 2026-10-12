@@ -1,0 +1,15 @@
+Logos du livret
+===============
+
+Déposer ici les fichiers officiels, avec ces noms exacts (png, jpg ou svg) :
+
+  education-nationale.png   Bloc-marque « République française / Ministère de
+                            l'Éducation nationale ». À récupérer auprès de la
+                            direction ou sur le site institutionnel : ce logo est
+                            une marque de l'État, il n'est pas fourni avec
+                            l'application.
+  pierre-chanay.png         Logo de l'Institut Pierre Chanay.
+  fol58.png                 Logo de la FOL 58 (utilisé si le précédent est absent).
+
+Ils sont intégrés automatiquement aux PDF (bilan annuel et synthèse).
+Tant qu'un fichier est absent, un emplacement en pointillés apparaît à sa place.

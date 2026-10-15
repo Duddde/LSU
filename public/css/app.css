@@ -21,6 +21,8 @@
 }
 
 * { box-sizing: border-box; }
+html { overflow-x: hidden; }
+body { overflow-x: hidden; }
 html, body { height: 100%; }
 body {
   margin: 0;
@@ -69,8 +71,9 @@ main { max-width: 1600px; margin: 0 auto; padding: 20px 24px 60px; }
 h1.titre-page { font-size: 22px; margin: 0 0 14px; }
 .muted { color: var(--ink-3); }
 .small { font-size: 13px; }
-.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-width: 0; }
 .grow { flex: 1; }
+.grow, .app-header > *, .fiche-entete > * { min-width: 0; }
 .pile { display: flex; flex-direction: column; gap: 4px; }
 
 /* ----------------------------- Contrôles ----------------------------- */
@@ -101,6 +104,7 @@ label.champ > span { display: block; margin-bottom: 3px; font-weight: 500; }
 
 /* ------------------------------- Élèves ------------------------------ */
 table.liste { width: 100%; border-collapse: collapse; }
+table.liste { min-width: 680px; }
 table.liste th {
   text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .4px;
   color: var(--ink-3); padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap;
@@ -184,6 +188,7 @@ table.liste tbody tr.clic { cursor: pointer; }
 .niveaux button.on.x { background: #eef1f4; border-color: var(--ink-3); }
 .comp .meta { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
 .comp textarea { margin-top: 8px; min-height: 42px; }
+.comp .commentaire-competence { display: block; width: 100%; min-height: 54px; cursor: text; }
 .evolution { display: inline-flex; gap: 3px; align-items: center; margin-left: 8px; }
 .evolution b { font-size: 11px; color: var(--ink-3); font-weight: 400; }
 .evolution i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
@@ -276,8 +281,46 @@ body.glisse .arbre-ligne input { pointer-events: none; }
 .zone-depot.survol { border-color: var(--accent-2); background: #f0f8fb; color: var(--accent); }
 
 @media (max-width: 760px) {
-  .app-header { padding: 8px 12px; }
+  .app-header { padding: 8px 12px 10px; gap: 8px 12px; align-items: center; }
+  .app-header .brand { flex: 1 1 100%; min-width: 0; }
+  .app-header nav {
+    order: 3; flex: 1 1 100%; margin-left: 0; overflow-x: auto; scrollbar-width: thin;
+    padding-bottom: 2px; white-space: nowrap;
+  }
+  .app-header nav a { flex: 0 0 auto; }
+  .app-header .spacer { display: none; }
+  .app-header > .ident { flex: 1 1 0; min-width: 0; }
+  .app-header > .ident > select { min-width: 0; }
+  .app-header > .ident:last-child { justify-content: flex-end; }
   main { padding: 14px 12px 50px; }
+  .carte > header { align-items: stretch; }
+  .carte > header > .grow,
+  .carte > header > .recherche,
+  .carte > header > .legende { flex: 1 1 100%; max-width: none !important; }
+  .carte > header > .btn { justify-content: center; }
+  .carte > .corps { overflow-x: auto; }
+  .fiche-entete { gap: 12px; }
+  .fiche-entete > .row { flex: 1 1 100%; }
+  .onglets { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+  .onglets button { flex: 0 0 auto; white-space: nowrap; }
   .comp .haut { flex-direction: column; }
+  .comp .intitule { width: 100%; }
+  .niveaux { align-self: flex-start; }
+  .toasts { left: 12px; right: 12px; bottom: 12px; }
+  .toast { max-width: none; }
+}
+@media (max-width: 520px) {
+  .app-header > .ident { flex-basis: 100%; }
+  .app-header > .ident:last-child { justify-content: flex-start; }
+  .app-header .ident select { flex: 1; }
+  main { padding-left: 8px; padding-right: 8px; }
+  .carte > header, .carte > .corps { padding-left: 12px; padding-right: 12px; }
+  h1.titre-page { font-size: 20px; }
+  .fiche-entete h1 { font-size: 19px; }
+  .fiche-entete .avatar { width: 44px; height: 44px; font-size: 16px; }
+  .modale { border-radius: 10px; }
+  .modale .corps, .modale header, .modale footer { padding-left: 14px; padding-right: 14px; }
+  .modale footer { flex-wrap: wrap; }
+  .modale footer .btn { flex: 1 1 auto; justify-content: center; }
 }
 @media print { .app-header, .onglets, .btn { display: none !important; } }

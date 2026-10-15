@@ -69,7 +69,7 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, HOST, () => {
   const n = db.prepare('SELECT COUNT(*) AS n FROM nodes').get().n;
-  console.log(`\n  Livret Scolaire Unique — http://localhost:${PORT}`);
+  console.log(`\n  Livret scolaire — http://localhost:${PORT}`);
   console.log(`  ${n} entrées dans le référentiel, base : data/lsu.sqlite`);
   if (AUTH_ENABLED) {
     console.log('  Authentification : ACTIVE (LSU_AUTH=1)');

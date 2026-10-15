@@ -35,6 +35,20 @@ function entete(ongletActif) {
     etat.years.map((y) => h('option', { value: y.id, selected: y.id === etat.year?.id }, y.libelle))
   );
 
+  const selectPeriode = h(
+    'select',
+    {
+      title: 'Semestre du livret',
+      'aria-label': 'Semestre du livret',
+      onchange: (e) => {
+        etat.periode = e.target.value;
+        localStorage.setItem('lsu_periode', etat.periode);
+        rend();
+      },
+    },
+    ['1', '2'].map((p) => h('option', { value: p, selected: p === etat.periode }, `Semestre ${p}`))
+  );
+
   const identite = etat.authActive
     ? h(
         'div',
@@ -80,7 +94,7 @@ function entete(ongletActif) {
     h(
       'div',
       { class: 'brand' },
-      'Livret scolaire unique',
+      'Livret scolaire',
       h('small', {}, etat.settings.etablissement || '')
     ),
     h(
@@ -93,6 +107,7 @@ function entete(ongletActif) {
     ),
     h('div', { class: 'spacer' }),
     h('div', { class: 'ident' }, h('span', {}, 'Année'), selectAnnee),
+    h('div', { class: 'ident' }, h('span', {}, 'Période'), selectPeriode),
     identite
   );
 }

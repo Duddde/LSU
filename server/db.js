@@ -148,7 +148,7 @@ export const DEFAULT_SETTINGS = {
     "partagé ; elles sont traitées conformément au RGPD (règlement UE 2016/679) et à la loi " +
     "n° 78-17 du 6 janvier 1978 modifiée. Toute diffusion à un tiers non autorisé est interdite. " +
     "Droit d'accès, de rectification et d'effacement auprès de la direction de l'établissement.",
-  legende_vert: "Réalisé seul (peu d'aide)",
+  legende_vert: 'Réalisé seul',
   legende_orange: 'Réalisé avec aide',
   legende_rouge: "Réalisé avec beaucoup d'aide",
 };

@@ -119,7 +119,7 @@ export default async function vueEleves() {
               entete('nom', 'Nom'),
               entete('prenom', 'Prénom'),
               entete('naissance', 'Naissance'),
-              entete('classe', 'Classe'),
+              entete('classe', 'Groupe'),
               h('th', {}, 'Enseignante(s)'),
               h('th', {}, 'Suivi'),
               h('th', {}, '')
@@ -177,7 +177,7 @@ export function formulaireEleve(eleve = null, apres) {
   const prenom = h('input', { type: 'text', value: eleve?.prenom || '', required: true });
   const nom = h('input', { type: 'text', value: eleve?.nom || '', required: true });
   const naissance = h('input', { type: 'date', value: eleve?.date_naissance || '' });
-  const classe = h('input', { type: 'text', value: eleve?.classe || '', placeholder: 'ex. Groupe 2 / CE1' });
+  const classe = h('input', { type: 'text', value: eleve?.classe || '', placeholder: 'ex. Groupe 2' });
   const entree = h('input', { type: 'date', value: eleve?.date_entree || '' });
   const rattacher = h('input', { type: 'checkbox', checked: true });
   const archive = h('input', { type: 'checkbox', checked: !!eleve?.archive });
@@ -193,7 +193,7 @@ export function formulaireEleve(eleve = null, apres) {
         h('label', { class: 'champ' }, h('span', {}, 'Prénom *'), prenom),
         h('label', { class: 'champ' }, h('span', {}, 'Nom *'), nom),
         h('label', { class: 'champ' }, h('span', {}, 'Date de naissance'), naissance),
-        h('label', { class: 'champ' }, h('span', {}, 'Classe / groupe'), classe),
+        h('label', { class: 'champ' }, h('span', {}, 'Groupe'), classe),
         h('label', { class: 'champ' }, h('span', {}, "Date d'entrée dans l'établissement"), entree)
       ),
       eleve

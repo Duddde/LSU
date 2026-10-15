@@ -1,13 +1,13 @@
 import {
   h, mount, clear, modale, toast, confirme, normalise, surligne, frDate, frDateHeure,
-  age, tranche, initiales, taille, debounce,
+  age, initiales, taille, debounce,
 } from './dom.js';
 import { api, essaie, etat, chargeReferentiel, chargeEleves } from './api.js';
 import { navigue } from './app.js';
 import { formulaireEleve, formulaireRattachement, supprimeEleve } from './vue-eleves.js';
 
 const NIVEAUX = [
-  { cle: 'vert', classe: 'v', libelle: "Réalisé seul (peu d'aide)", court: 'Seul' },
+  { cle: 'vert', classe: 'v', libelle: 'Réalisé seul', court: 'Seul' },
   { cle: 'orange', classe: 'o', libelle: 'Réalisé avec aide', court: 'Avec aide' },
   { cle: 'rouge', classe: 'r', libelle: "Réalisé avec beaucoup d'aide", court: "Avec beaucoup d'aide" },
   { cle: null, classe: 'x', libelle: 'Non évalué', court: 'Non évalué' },
@@ -87,8 +87,7 @@ function enteteFiche({ eleve, year }) {
           { class: 'small muted' },
           [
             eleve.date_naissance ? `né(e) le ${frDate(eleve.date_naissance)}${a != null ? ` — ${a} ans` : ''}` : 'date de naissance non renseignée',
-            a != null ? tranche(a) : null,
-            eleve.classe ? `classe ${eleve.classe}` : null,
+            eleve.classe ? `groupe ${eleve.classe}` : null,
             `année de travail ${year.libelle}`,
           ]
             .filter(Boolean)
@@ -259,7 +258,10 @@ function ligneCompetence(node, ctx, parent) {
   const courant = ctx.evaluations[node.id] || { niveau: null, commentaire: '' };
   const meta = h('div', { class: 'meta' });
   const commentaire = h('textarea', {
+    class: 'commentaire-competence',
     placeholder: 'Commentaire (facultatif)…',
+    'aria-label': `Commentaire pour ${node.label}`,
+    rows: 2,
     value: courant.commentaire || '',
   });
 
@@ -557,7 +559,7 @@ function ongletRecap(ctx) {
         h('button', { class: 'btn primaire', onclick: () => dialogueImpression(ctx.eleve) }, '🖨 Bilan annuel (PDF)'),
         h(
           'button',
-          { class: 'btn', onclick: () => window.open(`/print/synthese/${ctx.eleve.id}?auto=1`, '_blank') },
+          { class: 'btn', onclick: () => window.open(`/print/synthese/${ctx.eleve.id}?periode=${encodeURIComponent(etat.periode)}&auto=1`, '_blank') },
           '🖨 Synthèse de progression (PDF)'
         )
       ),
@@ -576,6 +578,11 @@ function dialogueImpression(eleve) {
     {},
     etat.years.map((y) => h('option', { value: y.id, selected: y.id === etat.year?.id }, y.libelle))
   );
+  const periode = h(
+    'select',
+    {},
+    ['1', '2'].map((p) => h('option', { value: p, selected: p === etat.periode }, `Semestre ${p}`))
+  );
   const vides = h('input', { type: 'checkbox' });
   const cases = etat.referentiel.matieres
     .filter((m) => !m.hors_pdf)
@@ -591,6 +598,7 @@ function dialogueImpression(eleve) {
       'div',
       {},
       h('label', { class: 'champ' }, h('span', {}, 'Année scolaire'), annee),
+      h('label', { class: 'champ' }, h('span', {}, 'Période'), periode),
       h('div', { class: 'champ' }, h('span', { style: { fontWeight: '500' } }, 'Matières à inclure'), cases.map((c) => c.el)),
       h('label', { class: 'inline-check' }, vides, 'Inclure les compétences non évaluées'),
       horsPdf.length
@@ -610,7 +618,7 @@ function dialogueImpression(eleve) {
           onclick: () => {
             const ids = cases.filter((c) => c.input.checked).map((c) => c.m.id);
             if (!ids.length) return toast('Sélectionnez au moins une matière', 'err');
-            const p = new URLSearchParams({ year: annee.value, auto: '1' });
+            const p = new URLSearchParams({ year: annee.value, periode: periode.value, auto: '1' });
             if (vides.checked) p.set('vides', '1');
             if (ids.length !== cases.length) p.set('matieres', ids.join(','));
             window.open(`/print/eleve/${eleve.id}?${p}`, '_blank');
@@ -789,8 +797,8 @@ function ongletIdentite(ctx) {
     ['Nom', eleve.nom],
     ['Prénom', eleve.prenom],
     ['Date de naissance', frDate(eleve.date_naissance) || '—'],
-    ['Âge', a != null ? `${a} ans (${tranche(a)})` : '—'],
-    ['Classe / groupe', eleve.classe || '—'],
+    ['Âge', a != null ? `${a} ans` : '—'],
+    ['Groupe', eleve.classe || '—'],
     ["Date d'entrée", frDate(eleve.date_entree) || '—'],
   ];
 

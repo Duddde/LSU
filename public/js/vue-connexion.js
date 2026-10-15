@@ -28,7 +28,7 @@ export default function vueConnexion() {
 
   mount(
     document.getElementById('entete'),
-    h('div', { class: 'brand' }, 'Livret scolaire unique')
+    h('div', { class: 'brand' }, 'Livret scolaire')
   );
 
   return h(

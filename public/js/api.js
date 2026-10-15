@@ -51,6 +51,7 @@ export const etat = {
   teachers: [],
   years: [],
   year: null,
+  periode: localStorage.getItem('lsu_periode') || '1',
   settings: {},
   referentiel: null, // { matieres, competences }
   students: [],

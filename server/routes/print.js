@@ -25,9 +25,6 @@ const ageAt = (naissance, ref = new Date()) => {
   return a;
 };
 
-const tranche = (age) =>
-  age == null ? '' : age < 11 ? '6 → 11 ans' : age < 15 ? '11 → 15 ans' : '15 → 18 ans';
-
 function settings() {
   const out = {};
   for (const r of db.prepare('SELECT cle, valeur FROM settings').all()) out[r.cle] = r.valeur;
@@ -81,12 +78,10 @@ header.livret .sous { font-size: 9.5pt; color: #555e68; }
 .puce.rouge { background: var(--rouge); } .puce.nc { background: #fff; border: 1px solid var(--gris); }
 h2.matiere { background: #1c2127; color: #fff; font-size: 12pt; padding: 5px 10px; margin: 16px 0 0; border-radius: 4px 4px 0 0; }
 h3.cat1 { background: #ffcc99; font-size: 11pt; margin: 8px 0 0; padding: 4px 10px; border-left: 4px solid #e08900; }
-h4.cat2 { background: #ffffcc; font-size: 10.5pt; margin: 6px 0 0; padding: 3px 10px 3px 18px; border-left: 4px solid #d4c36a; }
-h5.cat3 { background: #eeeeee; font-size: 10pt; margin: 4px 0 0; padding: 3px 10px 3px 26px; border-left: 4px solid #b6bcc4; }
+h4.cat2 { background: #e6f4ea; font-size: 10.5pt; margin: 6px 0 0; padding: 3px 10px 3px 18px; border-left: 4px solid #2f8f4e; }
 table.comp { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
 table.comp td { border-bottom: 1px solid #e3e7ec; padding: 3px 6px; vertical-align: top; }
 table.comp td.lab { padding-left: 26px; }
-table.comp td.cyc { width: 62px; color: #6b747e; font-size: 8.5pt; white-space: nowrap; }
 table.comp td.niv { width: 150px; white-space: nowrap; font-weight: 600; }
 table.comp td.com { width: 32%; color: #434b55; font-style: italic; }
 .niv.vert { color: var(--vert); } .niv.orange { color: var(--orange); } .niv.rouge { color: var(--rouge); }
@@ -99,7 +94,7 @@ table.syn th, table.syn td { border: 1px solid #c8ced6; padding: 4px 8px; text-a
 table.syn th { background: #eef2f6; }
 .bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #edf0f3; min-width: 110px; }
 .bar span { display: block; }
-.signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; font-size: 9.5pt; }
+.signatures { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 20px; font-size: 9.5pt; }
 .signatures div { border-top: 1px solid #9aa2ab; padding-top: 4px; min-height: 48px; }
 footer.mentions { margin-top: 18px; border-top: 1px solid #c8ced6; padding-top: 6px; font-size: 7.5pt; color: #5a636d; text-align: justify; }
 .toolbar { position: sticky; top: 0; background: #1c2127; color: #fff; padding: 8px 12px; display: flex; gap: 10px; align-items: center; font-size: 10pt; }
@@ -130,8 +125,7 @@ function identite(eleve, extra = []) {
     ['Nom', eleve.nom],
     ['Prénom', eleve.prenom],
     ['Date de naissance', frDate(eleve.date_naissance) + (age != null ? ` (${age} ans)` : '')],
-    ['Tranche de référence', tranche(age)],
-    ['Classe / groupe', eleve.classe || '—'],
+    ['Groupe', eleve.classe || '—'],
     ['Enseignante(s)', eleve.enseignantes.map((t) => `${t.prenom} ${t.nom}`).join(', ') || '—'],
     ...extra,
   ];
@@ -163,7 +157,7 @@ function toolbar(label) {
 function mentions(st) {
   return `<footer class="mentions"><b>Mentions légales —</b> ${esc(st.mentions_legales)}
    ${st.etablissement ? `<br><b>${esc(st.etablissement)}</b>${st.gestionnaire ? ' — ' + esc(st.gestionnaire) : ''}${st.ville ? ' — ' + esc(st.ville) : ''}` : ''}
-   <br>Édité le ${frDate(new Date().toISOString())} depuis l'application Livret scolaire unique.</footer>`;
+   <br>Édité le ${frDate(new Date().toISOString())} depuis l'application Livret scolaire.</footer>`;
 }
 
 function studentOr404(id) {
@@ -214,18 +208,19 @@ router.get(
         .prepare('SELECT commentaire FROM year_comments WHERE student_id = ? AND year_id = ?')
         .get(eleve.id, year.id)?.commentaire || '';
 
+    const periode = req.query.periode === '2' ? 'Semestre 2' : 'Semestre 1';
     res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>Livret ${esc(eleve.nom)} ${esc(eleve.prenom)} — ${esc(year.libelle)}</title>
+<title>Livret ${esc(eleve.nom)} ${esc(eleve.prenom)} — ${esc(year.libelle)} — ${periode}</title>
 <style>${CSS}</style></head><body>
-${toolbar(`Bilan ${year.libelle}`)}
+${toolbar(`Bilan ${year.libelle} — ${periode}`)}
 <div class="page">
-${header(st, 'Livret scolaire unique')}
-${identite(eleve, [['Année scolaire', year.libelle]])}
+${header(st, 'Livret scolaire')}
+${identite(eleve, [['Année scolaire', year.libelle], ['Période', periode]])}
 ${legende(st)}
 ${corps || '<p><i>Aucune compétence évaluée pour cette période.</i></p>'}
 <div class="bloc"><h3>Appréciation générale — ${esc(year.libelle)}</h3><p>${esc(commentaireAnnuel)}</p></div>
 <div class="signatures">
-  <div>L'enseignante</div><div>Le chef d'établissement</div><div>Les représentants légaux</div>
+  <div>L'enseignante</div><div>Les représentants légaux</div>
 </div>
 ${mentions(st)}
 </div>
@@ -253,7 +248,6 @@ function renderMatiere(matiere, evals, avecVides) {
           const niv = e?.niveau;
           return `<tr>
             <td class="lab">${esc(f.label)}</td>
-            <td class="cyc">${esc(f.cycle || '')}</td>
             <td class="niv ${niv || 'nc'}">${niv ? `<i class="puce ${niv}"></i>${LABEL[niv]}` : '<i class="puce nc"></i>—'}</td>
             <td class="com">${esc(e?.commentaire || '')}</td>
           </tr>`;
@@ -263,9 +257,9 @@ function renderMatiere(matiere, evals, avecVides) {
     for (const b of branches) {
       const inner = walk(b, depth + 1);
       if (!inner) continue;
-      const tag = depth === 0 ? 'h3 class="cat1"' : depth === 1 ? 'h4 class="cat2"' : 'h5 class="cat3"';
-      const close = tag.split(' ')[0];
-      html += `<${tag}>${esc(b.label)}</${close}>${inner}`;
+      const tag = depth === 0 ? 'h3 class="cat1"' : depth === 1 ? 'h4 class="cat2"' : null;
+      const close = tag ? tag.split(' ')[0] : null;
+      html += tag ? `<${tag}>${esc(b.label)}</${close}>${inner}` : inner;
     }
     return html;
   };
@@ -346,12 +340,13 @@ router.get(
       )
       .all(eleve.id);
 
+    const periode = req.query.periode === '2' ? 'Semestre 2' : 'Semestre 1';
     res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <title>Synthèse ${esc(eleve.nom)} ${esc(eleve.prenom)}</title><style>${CSS}</style></head><body>
-${toolbar('Synthèse de progression')}
+${toolbar(`Synthèse de progression — ${periode}`)}
 <div class="page">
 ${header(st, 'Synthèse de progression — parcours scolaire')}
-${identite(eleve)}
+${identite(eleve, [['Période', periode]])}
 ${legende(st)}
 ${tableaux || '<p><i>Aucune évaluation enregistrée.</i></p>'}
 ${evolution}
@@ -361,7 +356,7 @@ ${commentaires
     (c) => `<div class="bloc"><h3>Appréciation ${esc(c.libelle)}</h3><p>${esc(c.commentaire)}</p></div>`
   )
   .join('')}
-<div class="signatures"><div>L'enseignante</div><div>Le chef d'établissement</div><div>Les représentants légaux</div></div>
+<div class="signatures"><div>L'enseignante</div><div>Les représentants légaux</div></div>
 ${mentions(st)}
 </div>
 ${req.query.auto === '1' ? '<script>window.addEventListener("load",()=>window.print())</script>' : ''}

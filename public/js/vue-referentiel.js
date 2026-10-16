@@ -50,29 +50,37 @@ export default async function vueReferentiel() {
 
   const stats = compteStats(ref.matieres);
 
+  // Légende des quatre profondeurs de l'arbre, reprise de la maquette.
+  const legendeNiveaux = h(
+    'div',
+    { class: 'legende-niveaux' },
+    [
+      ['Matière', 'var(--ink)'],
+      ['Orange', 'var(--cat1)'],
+      ['Jaune', 'var(--cat2)'],
+      ['Grise', 'var(--cat3)'],
+    ].map(([lib, couleur]) => h('span', {}, h('i', { style: { background: couleur } }), lib))
+  );
+
   return h(
     'div',
     {},
-    h('h1', { class: 'titre-page' }, 'Référentiel de compétences'),
     h(
       'div',
-      { class: 'carte' },
+      { class: 'page-tete' },
       h(
-        'header',
-        {},
-        h('div', { class: 'grow', style: { maxWidth: '320px' } }, champFiltre),
-        rechercheCompetences(ref, (c) => {
-          const chaine = c.path_ids.slice(0, -1);
-          chaine.forEach((idn) => ouverts.add(idn));
-          dessine();
-          setTimeout(() => {
-            const el = zone.querySelector(`[data-noeud="${c.id}"]`);
-            el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-            el?.querySelector('input')?.focus();
-          }, 50);
-        }, 'Aller à une compétence…'),
-        h('div', { class: 'spacer grow' }),
-        h('span', { class: 'small muted' }, `${stats.matieres} matières • ${stats.categories} catégories • ${stats.competences} compétences`),
+        'div',
+        { class: 'titres' },
+        h('h1', {}, 'Référentiel de compétences'),
+        h(
+          'div',
+          { class: 'sous' },
+          `${stats.matieres} matières · ${stats.categories} catégories · ${stats.competences} compétences`
+        )
+      ),
+      h(
+        'div',
+        { class: 'actions' },
         h('button', { class: 'btn', onclick: () => dialogueImport() }, 'Importer un ODT'),
         h(
           'button',
@@ -82,21 +90,33 @@ export default async function vueReferentiel() {
           },
           '+ Matière'
         )
-      ),
-      h(
-        'div',
-        { class: 'corps' },
-        h(
-          'p',
-          { class: 'small muted', style: { marginTop: 0 } },
-          'Niveaux : matière › catégorie orange › catégorie jaune › catégorie grise › compétence évaluable. ',
-          'Attrapez une ligne par sa poignée ⠿ pour la déplacer : déposée sur le haut ou le bas ',
-          'd’une ligne, elle se place avant ou après ; déposée au centre d’une catégorie, elle entre dedans. ',
-          'Une suppression est transformée en archivage si des évaluations existent déjà.'
-        ),
-        zone
       )
-    )
+    ),
+    h(
+      'div',
+      { class: 'row', style: { marginBottom: '20px' } },
+      h('div', { class: 'grow', style: { maxWidth: '320px' } }, champFiltre),
+      rechercheCompetences(ref, (c) => {
+        const chaine = c.path_ids.slice(0, -1);
+        chaine.forEach((idn) => ouverts.add(idn));
+        dessine();
+        setTimeout(() => {
+          const el = zone.querySelector(`[data-noeud="${c.id}"]`);
+          el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          el?.querySelector('input')?.focus();
+        }, 50);
+      }, 'Aller à une compétence…'),
+      h('div', { class: 'spacer grow' }),
+      legendeNiveaux
+    ),
+    h(
+      'p',
+      { class: 'small muted', style: { margin: '0 0 16px' } },
+      'Attrapez une ligne par sa poignée ⠿ pour la déplacer : déposée sur le haut ou le bas ',
+      'd’une ligne, elle se place avant ou après ; déposée au centre d’une catégorie, elle entre dedans. ',
+      'Une suppression est transformée en archivage si des évaluations existent déjà.'
+    ),
+    h('div', { class: 'carte' }, h('div', { class: 'corps' }, zone))
   );
 }
 

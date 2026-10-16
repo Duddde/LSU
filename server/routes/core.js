@@ -238,14 +238,20 @@ router.get(
   '/students',
   requireAuth,
   wrap((req, res) => {
+    // La jauge de suivi de la liste porte sur une seule année : celle demandée,
+    // sinon l'année courante. Le total nb_evals reste, lui, toutes années confondues.
+    const yearId = Number(req.query.year) || db.prepare('SELECT id FROM years WHERE courante = 1').get()?.id || 0;
     const rows = db
       .prepare(
         `SELECT s.*,
-                (SELECT COUNT(*) FROM evaluations e WHERE e.student_id = s.id AND e.niveau IS NOT NULL) AS nb_evals
+                (SELECT COUNT(*) FROM evaluations e WHERE e.student_id = s.id AND e.niveau IS NOT NULL) AS nb_evals,
+                (SELECT COUNT(*) FROM evaluations e WHERE e.student_id = s.id AND e.year_id = ? AND e.niveau = 'vert')   AS nb_vert,
+                (SELECT COUNT(*) FROM evaluations e WHERE e.student_id = s.id AND e.year_id = ? AND e.niveau = 'orange') AS nb_orange,
+                (SELECT COUNT(*) FROM evaluations e WHERE e.student_id = s.id AND e.year_id = ? AND e.niveau = 'rouge')  AS nb_rouge
          FROM students s
          ORDER BY s.nom COLLATE NOCASE, s.prenom COLLATE NOCASE`
       )
-      .all();
+      .all(yearId, yearId, yearId);
     res.json(rows.map(hydrateStudent));
   })
 );

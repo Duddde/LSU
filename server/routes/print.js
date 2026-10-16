@@ -59,56 +59,130 @@ const LOGOS = () => ({
 });
 
 const CSS = `
-:root { --vert:#2f8f4e; --orange:#e08900; --rouge:#c92a2a; --gris:#8b9199; }
+@import url("/css/fonts.css");
+/* Palette et typographie du thème « 2a » : le document imprimé et l'écran
+   parlent la même langue. Les couleurs sont données en oklch comme dans app.css. */
+:root {
+  --vert: oklch(0.58 0.12 150); --orange: oklch(0.72 0.14 65); --rouge: oklch(0.57 0.17 25);
+  --gris: #7a7973; --ink: #1c1d1f; --ink-2: #55544f; --ink-3: #7a7973;
+  --line: #e1dfd8; --line-2: #f2f0eb;
+  --cat1: oklch(0.72 0.14 55); --cat2: oklch(0.82 0.13 95); --cat3: #a9a8a2;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
 * { box-sizing: border-box; }
-body { font: 11pt/1.45 "Segoe UI", system-ui, sans-serif; color: #1c2127; margin: 0; }
+body {
+  font: 10.5pt/1.5 "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink); margin: 0; -webkit-font-smoothing: antialiased;
+}
 .page { padding: 14mm 12mm 18mm; }
-header.livret { display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #1c2127; padding-bottom: 10px; }
-header.livret img { height: 56px; width: auto; object-fit: contain; }
-header.livret .titre { flex: 1; text-align: center; }
-header.livret h1 { font-size: 16pt; margin: 0 0 2px; letter-spacing: .4px; }
-header.livret .sous { font-size: 9.5pt; color: #555e68; }
-.identite { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 20px; margin: 12px 0 6px;
-            border: 1px solid #c8ced6; border-radius: 6px; padding: 8px 12px; background: #f7f9fb; }
-.identite div { font-size: 10pt; }
-.identite b { color: #3b434d; font-weight: 600; }
-.legende { display: flex; gap: 16px; align-items: center; margin: 10px 0 14px; font-size: 9.5pt; }
-.puce { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+
+/* ------------------------------- En-tete ------------------------------ */
+header.livret {
+  display: grid; grid-template-columns: 110px minmax(0, 1fr) 110px; align-items: center; gap: 20px;
+  border-bottom: 2px solid var(--ink); padding-bottom: 14px;
+}
+header.livret img { height: 56px; width: 100%; object-fit: contain; }
+header.livret .titre { text-align: center; }
+header.livret h1 { font-size: 17pt; font-weight: 600; margin: 0 0 3px; letter-spacing: -0.01em; }
+header.livret .sous { font-size: 9pt; color: var(--ink-3); }
+header.livret .vide {
+  height: 56px; border: 1px dashed #c4c2bc; border-radius: 4px; display: flex; align-items: center;
+  justify-content: center; font-family: var(--mono); font-size: 6pt; color: var(--ink-3);
+  text-align: center; padding: 2px;
+  background: repeating-linear-gradient(135deg, #f6f5f1 0 5px, #fff 5px 10px);
+}
+
+/* ------------------------------ Identite ------------------------------ */
+.identite { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 16px 0 0; }
+.identite div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.identite b { font-size: 7.5pt; font-weight: 500; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.identite span { font-size: 10pt; font-weight: 500; }
+
+/* ------------------------------- Légende ------------------------------ */
+.legende {
+  display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin: 14px 0;
+  padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  font-size: 9pt; color: var(--ink-2);
+}
+.legende b { font-weight: 500; color: var(--ink-3); }
+.puce { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
 .puce.vert { background: var(--vert); } .puce.orange { background: var(--orange); }
-.puce.rouge { background: var(--rouge); } .puce.nc { background: #fff; border: 1px solid var(--gris); }
-h2.matiere { background: #1c2127; color: #fff; font-size: 12pt; padding: 5px 10px; margin: 16px 0 0; border-radius: 4px 4px 0 0; }
-h3.cat1 { background: #ffcc99; font-size: 11pt; margin: 8px 0 0; padding: 4px 10px; border-left: 4px solid #e08900; }
-h4.cat2 { background: #e6f4ea; font-size: 10.5pt; margin: 6px 0 0; padding: 3px 10px 3px 18px; border-left: 4px solid #2f8f4e; }
-table.comp { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
-table.comp td { border-bottom: 1px solid #e3e7ec; padding: 3px 6px; vertical-align: top; }
+.puce.rouge { background: var(--rouge); } .puce.nc { background: #fff; border: 1px solid #b5b3ad; }
+
+/* --------------------------- Hiérarchie ------------------------------- */
+/* Pas de bandeaux pleins : la hiérarchie est portée par la typographie et
+   par un petit marqueur de la couleur du niveau, comme dans le référentiel. */
+h2.matiere {
+  font-size: 14pt; font-weight: 600; letter-spacing: -0.01em; margin: 22px 0 0;
+  padding-bottom: 7px; border-bottom: 1px solid var(--ink);
+}
+h3.cat1, h4.cat2 {
+  display: flex; align-items: center; gap: 8px; font-weight: 600; margin: 0;
+  padding: 11px 0 6px; background: none; border: 0;
+}
+h3.cat1 { font-size: 10.5pt; }
+h4.cat2 { font-size: 10pt; padding-left: 12px; }
+h3.cat1::before, h4.cat2::before {
+  content: ''; width: 10px; height: 10px; border-radius: 2px; flex: none;
+}
+h3.cat1::before { background: var(--cat1); }
+h4.cat2::before { background: var(--cat2); }
+
+/* ----------------------------- Compétences ---------------------------- */
+table.comp { width: 100%; border-collapse: collapse; font-size: 9pt; }
+table.comp td { border-bottom: 1px solid var(--line-2); padding: 5px 6px; vertical-align: top; }
+table.comp tr:last-child td { border-bottom: 1px solid var(--line); }
 table.comp td.lab { padding-left: 26px; }
-table.comp td.niv { width: 150px; white-space: nowrap; font-weight: 600; }
-table.comp td.com { width: 32%; color: #434b55; font-style: italic; }
+table.comp td.niv { width: 140px; white-space: nowrap; font-weight: 600; }
+table.comp td.com { width: 30%; color: var(--ink-3); font-style: italic; }
 .niv.vert { color: var(--vert); } .niv.orange { color: var(--orange); } .niv.rouge { color: var(--rouge); }
-.niv.nc { color: var(--gris); font-weight: 400; }
-.bloc { margin-top: 16px; border: 1px solid #c8ced6; border-radius: 6px; padding: 10px 12px; page-break-inside: avoid; }
-.bloc h3 { margin: 0 0 6px; font-size: 11pt; }
-.bloc p { margin: 0; white-space: pre-wrap; min-height: 18px; }
-table.syn { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 6px; }
-table.syn th, table.syn td { border: 1px solid #c8ced6; padding: 4px 8px; text-align: left; }
-table.syn th { background: #eef2f6; }
-.bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #edf0f3; min-width: 110px; }
+.niv.nc { color: var(--ink-3); font-weight: 400; }
+
+/* ------------------------------- Blocs -------------------------------- */
+.bloc { margin-top: 18px; border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; page-break-inside: avoid; }
+.bloc h3 { margin: 0 0 6px; font-size: 10pt; font-weight: 600; }
+.bloc p { margin: 0; white-space: pre-wrap; min-height: 18px; font-size: 10pt; line-height: 1.55; }
+table.syn { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-top: 8px; }
+table.syn th, table.syn td { border-bottom: 1px solid var(--line-2); padding: 7px 8px; text-align: left; }
+table.syn th { font-size: 8pt; font-weight: 500; color: var(--ink-3); border-bottom: 1px solid var(--line); }
+.bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #efede8; min-width: 110px; }
 .bar span { display: block; }
-.signatures { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 20px; font-size: 9.5pt; }
-.signatures div { border-top: 1px solid #9aa2ab; padding-top: 4px; min-height: 48px; }
-footer.mentions { margin-top: 18px; border-top: 1px solid #c8ced6; padding-top: 6px; font-size: 7.5pt; color: #5a636d; text-align: justify; }
-.toolbar { position: sticky; top: 0; background: #1c2127; color: #fff; padding: 8px 12px; display: flex; gap: 10px; align-items: center; font-size: 10pt; }
-.toolbar button { font: inherit; padding: 5px 14px; border: 0; border-radius: 5px; background: #4c9aff; color: #fff; cursor: pointer; }
-.toolbar span { opacity: .8; }
+
+/* ----------------------- Signatures et mentions ----------------------- */
+.signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; margin-top: 28px; font-size: 9.5pt; }
+.signatures div { border-top: 1px solid var(--ink); padding-top: 6px; min-height: 52px; }
+footer.mentions {
+  margin-top: 20px; border-top: 1px solid var(--line); padding-top: 10px;
+  font-size: 7pt; line-height: 1.5; color: var(--ink-3); text-align: justify;
+}
+
+/* ------------------------------ Barre écran --------------------------- */
+.toolbar {
+  position: sticky; top: 0; background: #fff; color: var(--ink); padding: 10px 14px;
+  display: flex; gap: 12px; align-items: center; font-size: 9.5pt;
+  border-bottom: 1px solid var(--line);
+}
+.toolbar button {
+  font: inherit; font-weight: 600; padding: 8px 16px; border: 0; border-radius: 9px;
+  background: oklch(0.45 0.08 215); color: #fff; cursor: pointer;
+}
+.toolbar button:hover { background: oklch(0.39 0.08 215); }
+.toolbar span { color: var(--ink-3); }
+/* À l'écran, le document se présente comme la feuille A4 qu'il deviendra. */
+@media screen {
+  body { background: #e9e7e1; }
+  .page {
+    max-width: 210mm; margin: 24px auto; background: #fff; border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 12px 32px rgba(0, 0, 0, .08);
+  }
+}
 @media print { .toolbar { display: none; } .page { padding: 0; } @page { size: A4; margin: 12mm 11mm 12mm; } }
 `;
 
 function header(st, titre) {
   const l = LOGOS();
   const slot = (src, alt, fallback) =>
-    src
-      ? `<img src="${src}" alt="${esc(alt)}">`
-      : `<div style="height:56px;width:70px;border:1px dashed #c0c7cf;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:6.5pt;color:#8b9199;text-align:center;padding:2px">${esc(fallback)}</div>`;
+    src ? `<img src="${src}" alt="${esc(alt)}">` : `<div class="vide">${esc(fallback)}</div>`;
   return `<header class="livret">
     ${slot(l.etat, 'République française — Éducation nationale', 'Logo Éducation nationale')}
     <div class="titre">
@@ -130,7 +204,7 @@ function identite(eleve, extra = []) {
     ...extra,
   ];
   return `<section class="identite">${lignes
-    .map(([k, v]) => `<div><b>${esc(k)} :</b> ${esc(v || '—')}</div>`)
+    .map(([k, v]) => `<div><b>${esc(k)}</b><span>${esc(v || '—')}</span></div>`)
     .join('')}</section>`;
 }
 
@@ -145,7 +219,7 @@ function legende(st) {
 
 // Libellés courts pour la colonne de droite ; la légende en tête de document
 // porte la formulation complète (paramétrable).
-const LABEL = { vert: 'Seul', orange: 'Avec aide', rouge: "Avec beaucoup d'aide" };
+const LABEL = { vert: 'Seul', orange: 'Avec aide', rouge: "Beaucoup d'aide" };
 
 function toolbar(label) {
   return `<div class="toolbar">
@@ -257,6 +331,8 @@ function renderMatiere(matiere, evals, avecVides) {
     for (const b of branches) {
       const inner = walk(b, depth + 1);
       if (!inner) continue;
+      // Seules les deux catégories principales (orange, jaune) sont titrées :
+      // la grise est aplatie, ses compétences suivent la catégorie jaune.
       const tag = depth === 0 ? 'h3 class="cat1"' : depth === 1 ? 'h4 class="cat2"' : null;
       const close = tag ? tag.split(' ')[0] : null;
       html += tag ? `<${tag}>${esc(b.label)}</${close}>${inner}` : inner;

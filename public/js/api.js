@@ -80,6 +80,8 @@ export async function chargeReferentiel(force = false) {
 }
 
 export async function chargeEleves(force = true) {
-  if (force || !etat.students.length) etat.students = await api.get('/api/students');
+  // L'année est transmise pour que la jauge de suivi de la liste porte sur l'année affichée.
+  if (force || !etat.students.length)
+    etat.students = await api.get(`/api/students${etat.year ? `?year=${etat.year.id}` : ''}`);
   return etat.students;
 }

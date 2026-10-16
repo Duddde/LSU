@@ -4,10 +4,9 @@ import { navigue } from './app.js';
 
 const prefs = {
   q: '',
-  mine: false,
+  filtre: 'tous', // 'tous' | 'miens' | 'archives'
   tri: 'nom',
   sens: 1,
-  archives: false,
 };
 
 export default async function vueEleves() {
@@ -24,24 +23,33 @@ export default async function vueEleves() {
   });
 
   const corps = h('tbody');
-  const compteur = h('span', { class: 'muted small' });
+  const compteur = h('span', { class: 'sous' });
+  const chips = h('div', { class: 'chips' });
 
-  const checkMine = h('input', {
-    type: 'checkbox',
-    checked: prefs.mine,
-    onchange: (e) => {
-      prefs.mine = e.target.checked;
-      rafraichis();
-    },
-  });
-  const checkArchives = h('input', {
-    type: 'checkbox',
-    checked: prefs.archives,
-    onchange: (e) => {
-      prefs.archives = e.target.checked;
-      rafraichis();
-    },
-  });
+  const FILTRES = [
+    ['tous', 'Tous'],
+    ['miens', 'Mes élèves'],
+    ['archives', 'Archivés'],
+  ];
+
+  function dessineChips() {
+    mount(
+      chips,
+      FILTRES.map(([cle, lib]) =>
+        h(
+          'button',
+          {
+            class: `chip ${prefs.filtre === cle ? 'on' : ''}`,
+            onclick: () => {
+              prefs.filtre = cle;
+              rafraichis();
+            },
+          },
+          lib
+        )
+      )
+    );
+  }
 
   const entete = (cle, libelle) =>
     h(
@@ -61,8 +69,8 @@ export default async function vueEleves() {
   function rafraichis() {
     const nq = normalise(prefs.q).split(/\s+/).filter(Boolean);
     let liste = eleves.filter((e) => {
-      if (!prefs.archives && e.archive) return false;
-      if (prefs.mine && !e.enseignantes.some((t) => t.id === etat.user?.id)) return false;
+      if (prefs.filtre === 'archives' ? !e.archive : e.archive) return false;
+      if (prefs.filtre === 'miens' && !e.enseignantes.some((t) => t.id === etat.user?.id)) return false;
       if (!nq.length) return true;
       const champ = normalise(`${e.nom} ${e.prenom}`);
       return nq.every((mot) => champ.includes(mot));
@@ -75,7 +83,11 @@ export default async function vueEleves() {
     }[prefs.tri];
     liste = liste.sort((a, b) => cmp(a, b) * prefs.sens);
 
-    mount(compteur, `${liste.length} élève${liste.length > 1 ? 's' : ''} sur ${eleves.length}`);
+    mount(
+      compteur,
+      `${liste.length} élève${liste.length > 1 ? 's' : ''}${liste.length !== eleves.length ? ` sur ${eleves.length}` : ''} · année ${etat.year?.libelle || ''}`
+    );
+    dessineChips();
     mount(
       corps,
       liste.length
@@ -89,23 +101,28 @@ export default async function vueEleves() {
   return h(
     'div',
     {},
-    h('h1', { class: 'titre-page' }, 'Élèves'),
+    h(
+      'div',
+      { class: 'page-tete' },
+      h('div', { class: 'titres' }, h('h1', {}, 'Élèves'), compteur),
+      h(
+        'div',
+        { class: 'actions' },
+        h('button', { class: 'btn primaire', onclick: () => formulaireEleve() }, '+ Ajouter un élève')
+      )
+    ),
+    h(
+      'div',
+      { class: 'row', style: { marginBottom: '20px' } },
+      h('div', { class: 'grow', style: { maxWidth: '420px' } }, recherche),
+      chips
+    ),
     h(
       'div',
       { class: 'carte' },
       h(
-        'header',
-        {},
-        h('div', { class: 'grow', style: { maxWidth: '420px' } }, recherche),
-        h('label', { class: 'inline-check' }, checkMine, 'Mes élèves uniquement'),
-        h('label', { class: 'inline-check' }, checkArchives, 'Inclure les élèves archivés'),
-        h('div', { class: 'spacer grow' }),
-        compteur,
-        h('button', { class: 'btn primaire', onclick: () => formulaireEleve() }, '+ Ajouter un élève')
-      ),
-      h(
         'div',
-        { class: 'corps', style: { paddingTop: '4px' } },
+        { class: 'corps', style: { padding: '4px 0 0' } },
         h(
           'table',
           { class: 'liste' },
@@ -115,13 +132,11 @@ export default async function vueEleves() {
             h(
               'tr',
               {},
-              h('th', {}, ''),
               entete('nom', 'Nom'),
-              entete('prenom', 'Prénom'),
               entete('naissance', 'Naissance'),
               entete('classe', 'Groupe'),
               h('th', {}, 'Enseignante(s)'),
-              h('th', {}, 'Suivi'),
+              h('th', {}, `Suivi · ${etat.year?.libelle || ''}`),
               h('th', {}, '')
             )
           ),
@@ -134,14 +149,35 @@ export default async function vueEleves() {
 
 function ligneEleve(e) {
   const a = age(e.date_naissance);
+  const vus = (e.nb_vert || 0) + (e.nb_orange || 0) + (e.nb_rouge || 0);
+  const pct = (v) => (vus ? (v / vus) * 100 + '%' : '0');
   return h(
     'tr',
     { class: 'clic', onclick: () => navigue(`/eleve/${e.id}`) },
-    h('td', {}, h('span', { class: 'avatar' }, initiales(e.prenom, e.nom))),
-    h('td', {}, h('b', {}, e.nom), e.archive ? h('span', { class: 'pastille' }, 'archivé') : null),
-    h('td', {}, e.prenom),
-    h('td', { class: 'small' }, frDate(e.date_naissance) || '—', a != null ? h('span', { class: 'muted' }, ` (${a} ans)`) : null),
-    h('td', { class: 'small' }, e.classe || '—'),
+    h(
+      'td',
+      {},
+      h(
+        'div',
+        { class: 'row', style: { gap: '12px', flexWrap: 'nowrap' } },
+        h('span', { class: 'avatar' }, initiales(e.prenom, e.nom)),
+        h(
+          'span',
+          {},
+          h('b', {}, e.nom),
+          ' ',
+          e.prenom,
+          e.archive ? h('span', { class: 'pastille', style: { marginLeft: '8px' } }, 'archivé') : null
+        )
+      )
+    ),
+    h(
+      'td',
+      { class: 'small' },
+      frDate(e.date_naissance) || '—',
+      a != null ? h('span', { class: 'muted' }, ` · ${a} ans`) : null
+    ),
+    h('td', {}, h('span', { class: 'mono' }, e.classe || '—')),
     h(
       'td',
       {},
@@ -151,10 +187,29 @@ function ligneEleve(e) {
           )
         : h('span', { class: 'muted small' }, 'non rattaché')
     ),
-    h('td', { class: 'small muted' }, `${e.nb_evals} éval.`),
     h(
       'td',
       {},
+      h(
+        'div',
+        { class: 'row', style: { gap: '10px', flexWrap: 'nowrap' } },
+        h(
+          'span',
+          {
+            class: 'jauge',
+            style: { flex: '1' },
+            title: vus ? jaugeTitre(e) : 'Aucune évaluation cette année',
+          },
+          h('span', { class: 'v', style: { width: pct(e.nb_vert || 0) } }),
+          h('span', { class: 'o', style: { width: pct(e.nb_orange || 0) } }),
+          h('span', { class: 'r', style: { width: pct(e.nb_rouge || 0) } })
+        ),
+        h('span', { class: 'mono muted', style: { width: '52px', textAlign: 'right' } }, `${vus} év.`)
+      )
+    ),
+    h(
+      'td',
+      { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
       h(
         'button',
         {
@@ -166,9 +221,20 @@ function ligneEleve(e) {
           },
         },
         'Rattacher'
-      )
+      ),
+      h('button', { class: 'btn mini', style: { marginLeft: '6px' } }, 'Ouvrir')
     )
   );
+}
+
+/** Infobulle de la jauge de suivi, en reprenant les libellés des paramètres. */
+function jaugeTitre(e) {
+  const l = (cle, defaut) => etat.settings?.[`legende_${cle}`] || defaut;
+  return [
+    `${e.nb_vert} ${l('vert', 'réalisé seul')}`,
+    `${e.nb_orange} ${l('orange', 'réalisé avec aide')}`,
+    `${e.nb_rouge} ${l('rouge', "réalisé avec beaucoup d'aide")}`,
+  ].join(' · ');
 }
 
 /* ----------------------- Ajout / modification ------------------------ */

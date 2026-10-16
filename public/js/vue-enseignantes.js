@@ -1,4 +1,4 @@
-import { h, mount, modale, toast, confirme } from './dom.js';
+import { h, mount, modale, toast, confirme, initiales } from './dom.js';
 import { api, essaie, etat, chargeContexte } from './api.js';
 
 export default async function vueEnseignantes() {
@@ -12,10 +12,19 @@ export default async function vueEnseignantes() {
         h(
           'tr',
           { style: t.actif ? {} : { opacity: '.55' } },
-          h('td', {}, `${t.civilite} ${t.prenom} ${t.nom}`),
-          h('td', { class: 'small muted' }, t.email),
+          h(
+            'td',
+            {},
+            h(
+              'div',
+              { class: 'row', style: { gap: '12px', flexWrap: 'nowrap' } },
+              h('span', { class: 'avatar', style: { background: 'var(--line-2)', color: 'var(--ink-2)' } }, initiales(t.prenom, t.nom)),
+              h('span', { style: { fontWeight: '500' } }, `${t.civilite} ${t.prenom} ${t.nom}`)
+            )
+          ),
+          h('td', {}, h('span', { class: 'mono muted' }, t.email)),
           h('td', {}, t.role === 'admin' ? h('span', { class: 'pastille moi' }, 'administratrice') : h('span', { class: 'pastille' }, 'enseignante')),
-          h('td', { class: 'small' }, `${t.nb_eleves} élève(s) rattaché(s)`),
+          h('td', { class: 'small' }, `${t.nb_eleves} élève${t.nb_eleves > 1 ? 's' : ''}`),
           h('td', {}, t.actif ? '' : h('span', { class: 'pastille' }, 'compte désactivé')),
           h(
             'td',
@@ -56,28 +65,31 @@ export default async function vueEnseignantes() {
   return h(
     'div',
     {},
-    h('h1', { class: 'titre-page' }, 'Enseignantes'),
+    h(
+      'div',
+      { class: 'page-tete' },
+      h('div', { class: 'titres' }, h('h1', {}, 'Enseignantes')),
+      h(
+        'div',
+        { class: 'actions' },
+        h('button', { class: 'btn primaire', onclick: () => formulaire() }, '+ Ajouter une enseignante')
+      )
+    ),
     !etat.authActive
       ? h(
           'div',
           { class: 'bandeau-info' },
-          'L’authentification est désactivée : chacune choisit son identité dans l’en-tête et tout le monde a tous les droits. ',
-          'Les comptes créés ici sont déjà prêts pour le jour où l’authentification sera activée (LSU_AUTH=1).'
+          h('b', {}, 'Authentification désactivée'),
+          ' Chacune choisit son identité dans l’en-tête et tout le monde a tous les droits. ',
+          'Les comptes créés ici seront prêts quand l’authentification sera activée (LSU_AUTH=1).'
         )
       : null,
     h(
       'div',
       { class: 'carte' },
       h(
-        'header',
-        {},
-        h('h2', {}, 'Comptes'),
-        h('div', { class: 'spacer grow' }),
-        h('button', { class: 'btn primaire', onclick: () => formulaire() }, '+ Ajouter une enseignante')
-      ),
-      h(
         'div',
-        { class: 'corps', style: { paddingTop: '4px' } },
+        { class: 'corps', style: { padding: '4px 0 0' } },
         h(
           'table',
           { class: 'liste' },

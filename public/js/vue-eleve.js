@@ -9,7 +9,7 @@ import { formulaireEleve, formulaireRattachement, supprimeEleve } from './vue-el
 const NIVEAUX = [
   { cle: 'vert', classe: 'v', libelle: 'Réalisé seul', court: 'Seul' },
   { cle: 'orange', classe: 'o', libelle: 'Réalisé avec aide', court: 'Avec aide' },
-  { cle: 'rouge', classe: 'r', libelle: "Réalisé avec beaucoup d'aide", court: "Avec beaucoup d'aide" },
+  { cle: 'rouge', classe: 'r', libelle: "Réalisé avec beaucoup d'aide", court: "Beaucoup d'aide" },
   { cle: null, classe: 'x', libelle: 'Non évalué', court: 'Non évalué' },
 ];
 
@@ -73,25 +73,32 @@ function enteteFiche({ eleve, year }) {
   const a = age(eleve.date_naissance);
   return h(
     'div',
-    { class: 'carte' },
+    {},
     h(
       'div',
-      { class: 'corps fiche-entete' },
+      { class: 'fil' },
+      h('button', { onclick: () => navigue('/eleves') }, 'Élèves'),
+      h('span', { class: 'sep' }, '/'),
+      h('span', { class: 'courant' }, `${eleve.prenom} ${eleve.nom}`)
+    ),
+    h(
+      'div',
+      { class: 'fiche-entete' },
       h('span', { class: 'avatar' }, initiales(eleve.prenom, eleve.nom)),
       h(
         'div',
         { class: 'grow' },
-        h('h1', {}, `${eleve.nom.toUpperCase()} ${eleve.prenom}`),
+        h('h1', {}, `${eleve.prenom} ${eleve.nom}`),
         h(
           'div',
           { class: 'small muted' },
           [
-            eleve.date_naissance ? `né(e) le ${frDate(eleve.date_naissance)}${a != null ? ` — ${a} ans` : ''}` : 'date de naissance non renseignée',
-            eleve.classe ? `groupe ${eleve.classe}` : null,
-            `année de travail ${year.libelle}`,
+            eleve.date_naissance ? `Né(e) le ${frDate(eleve.date_naissance)}${a != null ? ` · ${a} ans` : ''}` : 'Date de naissance non renseignée',
+            eleve.classe ? `Groupe ${eleve.classe}` : null,
+            `Année ${year.libelle}`,
           ]
             .filter(Boolean)
-            .join('  •  ')
+            .join(' · ')
         ),
         h(
           'div',
@@ -107,9 +114,8 @@ function enteteFiche({ eleve, year }) {
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'btn', onclick: () => navigue('/eleves') }, '← Liste'),
         h('button', { class: 'btn', onclick: () => formulaireEleve(eleve, recharge) }, 'Modifier'),
-        h('button', { class: 'btn primaire', onclick: () => dialogueImpression(eleve) }, '🖨 Générer le PDF')
+        h('button', { class: 'btn primaire', onclick: () => dialogueImpression(eleve) }, 'Générer le PDF')
       )
     )
   );
@@ -161,7 +167,12 @@ function ongletEvaluation(ctx) {
         ? h(
             'div',
             { style: { marginTop: categories.length ? '18px' : '0' } },
-            categories.length ? h('h3', { style: { fontSize: '14px', margin: '0 0 8px' } }, 'Compétences de cette catégorie') : null,
+            h(
+              'div',
+              { class: 'comp-tete row' },
+              h('span', { class: 'grow' }, categories.length ? 'Compétences de cette catégorie' : node.label),
+              h('span', { class: 'mono muted' }, `${compteEvaluees(feuilles, ctx.evaluations)} / ${feuilles.length} évaluées`)
+            ),
             feuilles.map((f) => ligneCompetence(f, ctx, node))
           )
         : null,
@@ -261,20 +272,22 @@ function ligneCompetence(node, ctx, parent) {
     class: 'commentaire-competence',
     placeholder: 'Commentaire (facultatif)…',
     'aria-label': `Commentaire pour ${node.label}`,
-    rows: 2,
+    rows: 1,
     value: courant.commentaire || '',
   });
 
-  const boutons = NIVEAUX.map((n) =>
+  const SEGMENTS = NIVEAUX.filter((n) => n.cle);
+  const boutons = SEGMENTS.map((n) =>
     h(
       'button',
       {
         class: `${n.classe} ${courant.niveau === n.cle ? 'on' : ''}`,
-        title: libelleNiveau(n),
+        title: `${libelleNiveau(n)} — recliquer pour revenir à « non évalué »`,
         'aria-label': libelleNiveau(n),
         onclick: () => choisir(n.cle),
       },
-      h('i')
+      h('i'),
+      n.court
     )
   );
 
@@ -283,8 +296,7 @@ function ligneCompetence(node, ctx, parent) {
       meta,
       courant.updated_at
         ? `Saisi le ${frDateHeure(courant.updated_at)}${courant.par ? ` par ${courant.par}` : ''}`
-        : h('span', { class: 'muted' }, 'Pas encore évaluée cette année'),
-      evolutionBadge(ctx.evolution[node.id], ctx.year.libelle)
+        : h('span', { class: 'muted' }, 'Pas encore évaluée cette année')
     );
   }
 
@@ -312,7 +324,7 @@ function ligneCompetence(node, ctx, parent) {
 
   function choisir(cle) {
     courant.niveau = courant.niveau === cle ? null : cle;
-    boutons.forEach((b, i) => b.classList.toggle('on', NIVEAUX[i].cle === courant.niveau));
+    boutons.forEach((b, i) => b.classList.toggle('on', SEGMENTS[i].cle === courant.niveau));
     enregistre();
   }
 
@@ -331,14 +343,24 @@ function ligneCompetence(node, ctx, parent) {
       h(
         'div',
         { class: 'intitule' },
-        node.label,
-        node.cycle ? h('span', { class: 'cycle' }, node.cycle) : null
+        h('span', {}, node.label),
+        h(
+          'div',
+          { class: 'bas' },
+          node.cycle ? h('span', { class: 'cycle' }, node.cycle) : null,
+          evolutionBadge(ctx.evolution[node.id], ctx.year.libelle)
+        )
       ),
+      commentaire,
       h('div', { class: 'niveaux' }, boutons)
     ),
-    commentaire,
     meta
   );
+}
+
+/** Nombre de compétences déjà évaluées parmi une liste de feuilles. */
+function compteEvaluees(feuilles, evaluations) {
+  return feuilles.filter((f) => evaluations[f.id]?.niveau).length;
 }
 
 function evolutionBadge(serie, anneeCourante) {
@@ -550,20 +572,38 @@ function ongletRecap(ctx) {
     {},
     h(
       'div',
-      { class: 'carte' },
+      { class: 'cartes-action', style: { marginBottom: '20px' } },
       h(
-        'header',
-        {},
-        h('h2', {}, 'Documents à générer'),
-        h('div', { class: 'spacer grow' }),
-        h('button', { class: 'btn primaire', onclick: () => dialogueImpression(ctx.eleve) }, '🖨 Bilan annuel (PDF)'),
+        'div',
+        { class: 'carte-action' },
+        h(
+          'div',
+          { class: 'lib' },
+          h('b', {}, 'Bilan annuel'),
+          h('span', {}, 'Compétences, appréciation, signatures')
+        ),
+        h('button', { class: 'btn primaire', onclick: () => dialogueImpression(ctx.eleve) }, 'PDF')
+      ),
+      h(
+        'div',
+        { class: 'carte-action' },
+        h(
+          'div',
+          { class: 'lib' },
+          h('b', {}, 'Synthèse de progression'),
+          h('span', {}, "Évolution d'une année sur l'autre")
+        ),
         h(
           'button',
           { class: 'btn', onclick: () => window.open(`/print/synthese/${ctx.eleve.id}?periode=${encodeURIComponent(etat.periode)}&auto=1`, '_blank') },
-          '🖨 Synthèse de progression (PDF)'
+          'PDF'
         )
-      ),
-      h('div', { class: 'corps small muted' }, 'Le document s’ouvre dans un nouvel onglet : choisissez « Enregistrer au format PDF » dans la boîte d’impression.')
+      )
+    ),
+    h(
+      'p',
+      { class: 'small muted', style: { margin: '0 0 20px' } },
+      'Le document s’ouvre dans un nouvel onglet : choisissez « Enregistrer au format PDF » dans la boîte d’impression.'
     ),
     zone,
     histo
@@ -635,44 +675,115 @@ function dialogueImpression(eleve) {
 
 function ongletDossier(ctx) {
   const liste = h('div', {});
-  const zone = h('div', { class: 'zone-depot' }, 'Glissez un fichier ici, ou cliquez pour parcourir');
+  const chips = h('div', { class: 'chips' });
+  const zone = h(
+    'div',
+    { class: 'zone-depot' },
+    h(
+      'div',
+      { class: 'depot-tete' },
+      h(
+        'div',
+        { class: 'lib' },
+        h('b', {}, 'Déposez des fichiers ici'),
+        h('span', {}, 'PDF, images, documents · un libellé et une catégorie vous seront demandés')
+      ),
+      h('span', { class: 'btn' }, 'Parcourir…')
+    )
+  );
   const input = h('input', { type: 'file', hidden: true });
   let categories = [];
+  let documents = [];
+  let filtre = 'Tous';
+
+  function dessine() {
+    const visibles = filtre === 'Tous' ? documents : documents.filter((d) => d.categorie === filtre);
+
+    const compte = (c) => (c === 'Tous' ? documents.length : documents.filter((d) => d.categorie === c).length);
+    // Comme sur la maquette, seules les catégories qui contiennent au moins un
+    // document sont proposées — plus celle filtrée, pour pouvoir en sortir.
+    const utiles = categories.filter((c) => compte(c) || c === filtre);
+    mount(
+      chips,
+      ['Tous', ...utiles].map((c) =>
+        h(
+          'button',
+          {
+            class: `chip ${filtre === c ? 'on' : ''}`,
+            onclick: () => {
+              filtre = c;
+              dessine();
+            },
+          },
+          c,
+          h('span', { class: 'n' }, compte(c))
+        )
+      )
+    );
+
+    mount(
+      liste,
+      visibles.length
+        ? [
+            h(
+              'div',
+              { class: 'doc-ligne tete' },
+              h('span', { style: { width: '34px' } }),
+              h('span', { class: 'nom' }, 'Document'),
+              h('span', { style: { width: '170px' } }, 'Catégorie'),
+              h('span', { style: { width: '80px' } }, 'Taille'),
+              h('span', { style: { width: '130px' } }, 'Déposé le'),
+              h('span', { style: { width: '260px' } })
+            ),
+            ...visibles.map((d) =>
+              h(
+                'div',
+                { class: 'doc-ligne' },
+                h('span', { class: 'vignette' }, extension(d.nom_origine)),
+                h(
+                  'div',
+                  { class: 'nom' },
+                  h('a', { href: `/api/documents/${d.id}/fichier`, target: '_blank' }, d.libelle),
+                  h('div', { class: 'mono muted' }, d.nom_origine)
+                ),
+                h('span', { style: { width: '170px' } }, h('span', { class: 'pastille' }, d.categorie)),
+                h('span', { class: 'mono muted', style: { width: '80px' } }, taille(d.taille || 0)),
+                h(
+                  'span',
+                  { class: 'small muted', style: { width: '130px' }, title: d.par ? `par ${d.par}` : '' },
+                  frDateHeure(d.date)
+                ),
+                h(
+                  'span',
+                  { class: 'row', style: { width: '260px', justifyContent: 'flex-end', flexWrap: 'nowrap' } },
+                  h('a', { class: 'btn mini', href: `/api/documents/${d.id}/fichier?download=1` }, 'Télécharger'),
+                  h('button', { class: 'btn mini', onclick: () => renomme(d) }, 'Renommer'),
+                  h(
+                    'button',
+                    {
+                      class: 'btn mini danger',
+                      onclick: async () => {
+                        if (!(await confirme(`Supprimer « ${d.libelle} » du dossier ?`, { libelle: 'Supprimer' }))) return;
+                        await essaie(api.del(`/api/documents/${d.id}`), 'Document supprimé');
+                        recharge();
+                      },
+                    },
+                    'Supprimer'
+                  )
+                )
+              )
+            ),
+          ]
+        : h('div', { class: 'vide' }, documents.length ? 'Aucun document dans cette catégorie.' : "Aucun document dans le dossier de cet élève.")
+    );
+  }
 
   async function recharge() {
     const r = await api.get(`/api/students/${ctx.eleve.id}/documents`);
     categories = r.categories;
-    mount(
-      liste,
-      r.documents.length
-        ? r.documents.map((d) =>
-            h(
-              'div',
-              { class: 'doc-ligne' },
-              h(
-                'div',
-                { class: 'nom' },
-                h('a', { href: `/api/documents/${d.id}/fichier`, target: '_blank' }, d.libelle),
-                h('div', { class: 'small muted' }, `${d.categorie} • ${d.nom_origine} • ${taille(d.taille || 0)} • ${frDateHeure(d.date)}${d.par ? ` • ${d.par}` : ''}`)
-              ),
-              h('a', { class: 'btn mini', href: `/api/documents/${d.id}/fichier?download=1` }, 'Télécharger'),
-              h('button', { class: 'btn mini', onclick: () => renomme(d) }, 'Renommer'),
-              h(
-                'button',
-                {
-                  class: 'btn mini danger',
-                  onclick: async () => {
-                    if (!(await confirme(`Supprimer « ${d.libelle} » du dossier ?`, { libelle: 'Supprimer' }))) return;
-                    await essaie(api.del(`/api/documents/${d.id}`), 'Document supprimé');
-                    recharge();
-                  },
-                },
-                'Supprimer'
-              )
-            )
-          )
-        : h('div', { class: 'vide' }, 'Aucun document dans le dossier de cet élève.')
-    );
+    documents = r.documents;
+    if (filtre !== 'Tous' && !categories.includes(filtre)) filtre = 'Tous';
+    dessine();
   }
 
   function renomme(d) {
@@ -753,10 +864,18 @@ function ongletDossier(ctx) {
 
   return h(
     'div',
-    { class: 'carte' },
-    h('header', {}, h('h2', {}, 'Dossier de l’élève'), h('span', { class: 'muted small' }, 'bilans, projets (PPS/PAP/PPRE), courriers, comptes rendus…')),
-    h('div', { class: 'corps' }, zone, input, h('div', { style: { marginTop: '14px' } }, liste))
+    {},
+    zone,
+    input,
+    h('div', { style: { margin: '20px 0' } }, chips),
+    h('div', { class: 'carte' }, h('div', { class: 'corps' }, liste))
   );
+}
+
+/** Extension affichée dans la vignette (4 caractères au plus). */
+function extension(nom = '') {
+  const m = /\.([a-z0-9]{1,4})$/i.exec(nom);
+  return m ? m[1].slice(0, 4) : '?';
 }
 
 /* -------------------------- Onglet identité -------------------------- */
@@ -804,45 +923,66 @@ function ongletIdentite(ctx) {
 
   return h(
     'div',
-    {},
+    { class: 'identite-grille' },
     h(
       'div',
       { class: 'carte' },
       h(
         'header',
         {},
-        h('h2', {}, 'Identité'),
-        h('div', { class: 'spacer grow' }),
-        h('button', { class: 'btn', onclick: () => formulaireEleve(eleve, recharge) }, 'Modifier'),
-        h('button', { class: 'btn', onclick: () => formulaireRattachement(eleve, recharge) }, 'Rattacher à une enseignante'),
-        h(
-          'button',
-          {
-            class: 'btn danger',
-            onclick: async () => {
-              if (await supprimeEleve(eleve)) navigue('/eleves');
-            },
-          },
-          'Supprimer'
-        )
+        h('h2', { class: 'grow' }, 'Identité'),
+        h('button', { class: 'btn mini', onclick: () => formulaireEleve(eleve, recharge) }, 'Modifier')
       ),
       h(
         'div',
-        { class: 'corps grille' },
-        fiche.map(([k, v]) => h('div', { style: { marginBottom: '10px' } }, h('div', { class: 'small muted' }, k), h('div', {}, v)))
+        { class: 'corps' },
+        h(
+          'dl',
+          { class: 'fiche-identite' },
+          fiche.map(([k, v]) => [h('dt', {}, k), h('dd', {}, v)])
+        ),
+        h(
+          'div',
+          { class: 'row', style: { marginTop: '18px' } },
+          h('button', { class: 'btn mini', onclick: () => formulaireRattachement(eleve, recharge) }, 'Rattacher à une enseignante'),
+          h(
+            'button',
+            {
+              class: 'btn mini danger',
+              onclick: async () => {
+                if (await supprimeEleve(eleve)) navigue('/eleves');
+              },
+            },
+            'Supprimer l’élève'
+          )
+        )
       )
     ),
     h(
       'div',
-      { class: 'carte' },
-      h('header', {}, h('h2', {}, 'Commentaire global de scolarité'), infoGlobal),
-      h('div', { class: 'corps' }, global, h('p', { class: 'small muted' }, 'Figure sur la synthèse de progression. Enregistrement automatique.'))
-    ),
-    h(
-      'div',
-      { class: 'carte' },
-      h('header', {}, h('h2', {}, 'Appréciations par année')),
-      h('div', { class: 'corps' }, lignesAnnees.length ? lignesAnnees : h('p', { class: 'muted' }, 'Aucune année scolaire définie.'))
+      { class: 'pile', style: { gap: '20px' } },
+      h(
+        'div',
+        { class: 'carte' },
+        h(
+          'header',
+          {},
+          h(
+            'div',
+            { class: 'titres grow' },
+            h('h2', {}, 'Commentaire global de scolarité'),
+            h('div', { class: 'descr' }, 'Parcours de l’élève, repris dans la synthèse de progression.')
+          ),
+          infoGlobal
+        ),
+        h('div', { class: 'corps' }, global)
+      ),
+      h(
+        'div',
+        { class: 'carte' },
+        h('header', {}, h('h2', {}, 'Appréciations annuelles')),
+        h('div', { class: 'corps' }, lignesAnnees.length ? lignesAnnees : h('p', { class: 'muted' }, 'Aucune année scolaire définie.'))
+      )
     )
   );
 }

@@ -1,4 +1,4 @@
-import { h, mount, toast } from './dom.js';
+import { h, mount, toast, initiales } from './dom.js';
 import { api, etat, chargeContexte } from './api.js';
 import vueEleves from './vue-eleves.js';
 import vueEleve from './vue-eleve.js';
@@ -52,7 +52,8 @@ function entete(ongletActif) {
   const identite = etat.authActive
     ? h(
         'div',
-        { class: 'ident' },
+        { class: 'ident-pilule' },
+        h('span', { class: 'avatar' }, initiales(etat.user?.prenom, etat.user?.nom)),
         h('span', {}, etat.user ? `${etat.user.prenom} ${etat.user.nom}` : ''),
         h(
           'button',
@@ -68,12 +69,13 @@ function entete(ongletActif) {
       )
     : h(
         'div',
-        { class: 'ident' },
-        h('span', {}, 'Je suis :'),
+        { class: 'ident-pilule' },
+        h('span', { class: 'avatar' }, initiales(etat.user?.prenom, etat.user?.nom)),
         h(
           'select',
           {
             title: 'Identité courante (filtre « mes élèves »)',
+            'aria-label': 'Identité courante',
             onchange: async (e) => {
               await api.post('/api/profil', { teacher_id: Number(e.target.value) });
               await chargeContexte();
@@ -106,8 +108,7 @@ function entete(ongletActif) {
       lien('/parametres', 'Paramètres', 'parametres')
     ),
     h('div', { class: 'spacer' }),
-    h('div', { class: 'ident' }, h('span', {}, 'Année'), selectAnnee),
-    h('div', { class: 'ident' }, h('span', {}, 'Période'), selectPeriode),
+    h('div', { class: 'seg-entete' }, selectAnnee, selectPeriode),
     identite
   );
 }
